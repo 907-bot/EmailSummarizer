@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Gmail - MailBrief AI</title>
+  <meta name="description" content="Connect your Google Gmail account to generate AI email summaries.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-full: 9999px;
+      --shadow-glow: 0 0 35px rgba(99, 102, 241, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #090d16 55%, #030712 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle background ambient glows */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      top: 10%;
+      left: 15%;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+      bottom: 10%;
+      right: 15%;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 40px 36px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+      margin-bottom: 16px;
+    }
+
+    .brand-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .brand-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 17px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 13px 16px 13px 44px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--border-focus);
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .form-input::placeholder {
+      color: #475569;
+    }
+
+    .toggle-pwd {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+
+    .toggle-pwd:hover {
+      color: var(--text-main);
+    }
+
+    /* Requested Helper Link & Box */
+    .helper-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(6, 182, 212, 0.06) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-top: 10px;
+      margin-bottom: 24px;
+    }
+
+    .app-password-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #818cf8;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.15s ease;
+      line-height: 1.4;
+    }
+
+    .app-password-link:hover {
+      color: #a5b4fc;
+      text-decoration: underline;
+    }
+
+    .helper-steps {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .helper-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .helper-step-num {
+      color: #a5b4fc;
+      font-weight: 700;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Status & Alerts */
+    .status-alert {
+      display: none;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .status-alert.error {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+    }
+
+    .status-alert.success {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    /* Security Notice */
+    .security-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      color: var(--text-main);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+
+    <div class="brand-header">
+      <div class="brand-icon">📬</div>
+      <h1 class="brand-title">Connect Your Gmail</h1>
+      <p class="brand-subtitle">
+        Enter your Gmail account and Google App Password to automatically fetch and summarize your emails with Hugging Face AI.
+      </p>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="status-alert" class="status-alert"></div>
+
+    <form id="login-form">
+
+      <!-- Email Address Input -->
+      <div class="form-group">
+        <label for="gmail_user" class="form-label">
+          <span>Gmail Address</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input
+            type="email"
+            id="gmail_user"
+            name="gmail_user"
+            class="form-input"
+            placeholder="youremail@gmail.com"
+            required
+            autocomplete="email"
+          >
+        </div>
+      </div>
+
+      <!-- App Password Input -->
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label for="gmail_app_password" class="form-label">
+          <span>Google App Password</span>
+          <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: normal;">16 characters</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input
+            type="password"
+            id="gmail_app_password"
+            name="gmail_app_password"
+            class="form-input"
+            placeholder="abcd efgh ijkl mnop"
+            required
+            autocomplete="current-password"
+          >
+          <button type="button" class="toggle-pwd" id="toggle-pwd" title="Show/Hide Password">👁️</button>
+        </div>
+      </div>
+
+      <!-- Requested Link & Help Box -->
+      <div class="helper-card">
+        <a
+          href="https://myaccount.google.com/apppasswords"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="app-password-link"
+        >
+          <span>🔗</span>
+          <span>Get your password to access mail by creating an app name: <strong>email summarizer</strong></span>
+        </a>
+        
+        <div class="helper-steps">
+          <div class="helper-step-item">
+            <span class="helper-step-num">1.</span>
+            <span>Click the link above to open Google App Passwords (login required).</span>
+          </div>
+          <div class="helper-step-item">
+            <span class="helper-step-num">2.</span>
+            <span>Enter App name as <code style="color: #cbd5e1; background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 4px;">email summarizer</code> and click <strong>Create</strong>.</span>
+          </div>
+          <div class="helper-step-item">
+            <span class="helper-step-num">3.</span>
+            <span>Copy the generated 16-character code and paste it into the field above.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" id="btn-submit" class="btn-submit">
+        <span id="btn-spinner" class="spinner" style="display: none;"></span>
+        <span id="btn-text">Connect & Launch Dashboard 🚀</span>
+      </button>
+
+    </form>
+
+    <a href="/" class="back-link">← Go to Dashboard (Offline / Mock Mode)</a>
+
+    <div class="security-notice">
+      <span>🔒</span>
+      <span>Direct TLS connection to Gmail IMAP. Passwords are never shared.</span>
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const emailInput = document.getElementById('gmail_user');
+    const pwdInput = document.getElementById('gmail_app_password');
+    const togglePwdBtn = document.getElementById('toggle-pwd');
+    const submitBtn = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const alertBox = document.getElementById('status-alert');
+
+    // Pre-fill from localStorage if available
+    const savedEmail = localStorage.getItem('mailbrief_user') || '';
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+    }
+
+    // Toggle password visibility
+    togglePwdBtn.addEventListener('click', () => {
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        togglePwdBtn.textContent = '🙈';
+      } else {
+        pwdInput.type = 'password';
+        togglePwdBtn.textContent = '👁️';
+      }
+    });
+
+    function showAlert(message, isError = true) {
+      alertBox.className = `status-alert ${isError ? 'error' : 'success'}`;
+      alertBox.innerHTML = `<span>${isError ? '⚠️' : '✅'}</span><span>${message}</span>`;
+      alertBox.style.display = 'flex';
+    }
+
+    function hideAlert() {
+      alertBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const user = emailInput.value.trim();
+      const pwd = pwdInput.value.trim().replace(/\s+/g, ''); // strip spaces from google's format
+
+      if (!user || !pwd) {
+        showAlert('Please enter both your Gmail address and Google App Password.');
+        return;
+      }
+
+      // Show loading state
+      submitBtn.disabled = true;
+      btnSpinner.style.display = 'inline-block';
+      btnText.textContent = 'Verifying connection with Google...';
+
+      try {
+        const response = await fetch('/api/auth/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user,
+            app_password: pwd
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+          // Store in localStorage for dashboard reference
+          localStorage.setItem('mailbrief_user', user);
+          localStorage.setItem('mailbrief_connected', 'true');
+
+          showAlert('Connected successfully! Launching and syncing your inbox...', false);
+          btnText.textContent = 'Redirecting...';
+
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          showAlert(data.detail || 'Connection failed. Please verify your App Password and ensure IMAP is enabled in Gmail settings.');
+          submitBtn.disabled = false;
+          btnSpinner.style.display = 'none';
+          btnText.textContent = 'Connect & Launch Dashboard 🚀';
+        }
+      } catch (err) {
+        showAlert('Network error while connecting to server. Please try again.');
+        submitBtn.disabled = false;
+        btnSpinner.style.display = 'none';
+        btnText.textContent = 'Connect & Launch Dashboard 🚀';
+      }
+    });
+  </script>
+</body>
+</html>

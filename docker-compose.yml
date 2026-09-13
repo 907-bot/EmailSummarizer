@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  email-summarizer:
+    build: .
+    container_name: email_summarizer_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HF_MODEL=${HF_MODEL:-meta-llama/Llama-3.2-3B-Instruct}
+      - ENABLE_DESKTOP_NOTIFICATIONS=false
+    volumes:
+      - ./data:/app/data

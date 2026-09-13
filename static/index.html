@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MailBrief AI - Email Summarizer & Categorization</title>
+  <meta name="description" content="AI-powered email summary dashboard with labels, Hugging Face LLM insights, and macOS Messages delivery.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.95);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 10% 0%, #1e1b4b 0%, #090d16 50%, #030712 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navbar */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 36px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .account-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .account-badge:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      color: var(--text-main);
+    }
+
+    .account-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      outline: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+      color: white;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Main Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      flex: 1;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 36px 40px;
+      gap: 32px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .label-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .label-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .label-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .label-item.active {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      font-weight: 700;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .label-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .label-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .label-count {
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    /* System Status Card */
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.82rem;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .status-val {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Content Area */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Stats Ribbon */
+    .stats-ribbon {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .stat-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    /* Filter / Search Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px 20px;
+    }
+
+    .search-box {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-dim);
+      font-size: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 14px 10px 42px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Email Cards Stream */
+    .email-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .email-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .email-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .sender-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .sender-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sender-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .email-date {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-Work { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-Security { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-Meeting { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-Action.Required { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-Finance { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-Newsletter { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-Personal { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+    .badge-General { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
+
+    .email-subject {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #f1f5f9;
+      line-height: 1.4;
+    }
+
+    /* Takeaway Box */
+    .takeaway-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.08) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .takeaway-icon {
+      font-size: 18px;
+      margin-top: 1px;
+    }
+
+    .takeaway-text {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    .takeaway-label {
+      font-weight: 700;
+      color: #a5b4fc;
+      margin-right: 6px;
+    }
+
+    /* Action Items */
+    .actions-box {
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--accent-amber);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+    }
+
+    .actions-header {
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .actions-list {
+      color: var(--text-muted);
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    /* Summary Details Accordion */
+    .details-toggle {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      margin-bottom: 12px;
+    }
+
+    .details-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .full-summary-content {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-line;
+      display: none;
+    }
+
+    .full-summary-content.show {
+      display: block;
+    }
+
+    /* Card Footer Actions */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-action.btn-messages:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-card);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-lg);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      color: var(--text-muted);
+      max-width: 420px;
+      margin: 0 auto 20px;
+      line-height: 1.5;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #1e1b4b;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      outline: none;
+    }
+
+    .modal-input:focus {
+      border-color: var(--primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .stats-ribbon {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <a href="/" class="brand">
+      <div class="brand-icon">📬</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-title">MailBrief AI</span>
+          <span class="brand-badge">PRO</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="nav-actions">
+      <!-- Connected Account Badge -->
+      <a href="/login" class="account-badge" id="account-status-badge" title="Click to connect or change Gmail account">
+        <span class="account-dot" id="account-dot" style="background: #f59e0b;"></span>
+        <span id="account-email-text">Checking account...</span>
+        <span style="color: #818cf8; font-size: 0.75rem;">⚙️</span>
+      </a>
+
+      <button class="btn btn-secondary" id="btn-dry-sync" title="Sync mock emails for testing without live login">
+        ⚡ Mock Sync
+      </button>
+      <button class="btn btn-primary" id="btn-sync">
+        <span id="sync-spinner" style="display: none;" class="spinner"></span>
+        <span id="sync-btn-text">📥 Sync Gmail Inbox</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Label Categories Card -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">Categories & Labels</div>
+        <ul class="label-list" id="label-container">
+          <li class="label-item active" data-label="All">
+            <div class="label-left">
+              <span class="label-dot" style="background: #6366f1;"></span>
+              <span>All Emails</span>
+            </div>
+            <span class="label-count" id="count-All">0</span>
+          </li>
+          <li class="label-item" data-label="Action Required">
+            <div class="label-left">
+              <span class="label-dot" style="background: #f59e0b;"></span>
+              <span>Action Required</span>
+            </div>
+            <span class="label-count" id="count-Action">0</span>
+          </li>
+          <li class="label-item" data-label="Work">
+            <div class="label-left">
+              <span class="label-dot" style="background: #10b981;"></span>
+              <span>Work & Projects</span>
+            </div>
+            <span class="label-count" id="count-Work">0</span>
+          </li>
+          <li class="label-item" data-label="Security">
+            <div class="label-left">
+              <span class="label-dot" style="background: #f43f5e;"></span>
+              <span>Security & Alerts</span>
+            </div>
+            <span class="label-count" id="count-Security">0</span>
+          </li>
+          <li class="label-item" data-label="Meeting">
+            <div class="label-left">
+              <span class="label-dot" style="background: #a855f7;"></span>
+              <span>Meetings & Syncs</span>
+            </div>
+            <span class="label-count" id="count-Meeting">0</span>
+          </li>
+          <li class="label-item" data-label="Finance">
+            <div class="label-left">
+              <span class="label-dot" style="background: #06b6d4;"></span>
+              <span>Finance & Invoices</span>
+            </div>
+            <span class="label-count" id="count-Finance">0</span>
+          </li>
+          <li class="label-item" data-label="Personal">
+            <div class="label-left">
+              <span class="label-dot" style="background: #ec4899;"></span>
+              <span>Personal</span>
+            </div>
+            <span class="label-count" id="count-Personal">0</span>
+          </li>
+          <li class="label-item" data-label="Newsletter">
+            <div class="label-left">
+              <span class="label-dot" style="background: #94a3b8;"></span>
+              <span>Newsletters</span>
+            </div>
+            <span class="label-count" id="count-Newsletter">0</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Engine Status Card -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">Pipeline Status</div>
+        <div class="status-list">
+          <div class="status-item">
+            <span>LLM Model</span>
+            <span class="status-val" style="color: #818cf8;">Llama-3.2 (HF)</span>
+          </div>
+          <div class="status-item">
+            <span>Database</span>
+            <span class="status-val" style="color: #34d399;">SQLite (emails.db)</span>
+          </div>
+          <div class="status-item">
+            <span>macOS Banners</span>
+            <span class="status-val">Active 🔔</span>
+          </div>
+          <div class="status-item">
+            <span>Apple Messages</span>
+            <span class="status-val">Ready 💬</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); text-align: center;">
+          <a href="/login" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.82rem;">
+            🔑 Manage Credentials
+          </a>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+
+      <!-- Statistics Ribbon -->
+      <div class="stats-ribbon">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">📬</div>
+          <div class="stat-meta">
+            <span class="stat-label">Total Saved</span>
+            <span class="stat-number" id="stat-total">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">⚡</div>
+          <div class="stat-meta">
+            <span class="stat-label">Action Items</span>
+            <span class="stat-number" id="stat-actions">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">📅</div>
+          <div class="stat-meta">
+            <span class="stat-label">Meetings</span>
+            <span class="stat-number" id="stat-meetings">0</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(244, 63, 94, 0.15); color: #fb7185;">🔒</div>
+          <div class="stat-meta">
+            <span class="stat-label">Security</span>
+            <span class="stat-number" id="stat-security">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter Controls -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="Search previous emails by subject, sender, takeaway, or keyword...">
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-dim);" id="result-count">
+          Showing 0 emails
+        </div>
+      </div>
+
+      <!-- Email Cards List -->
+      <div class="email-feed" id="emails-container">
+        <!-- Rendered by JS -->
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Messages Modal -->
+  <div class="modal-overlay" id="messages-modal">
+    <div class="modal-card">
+      <div class="modal-title">💬 Send to Apple Messages</div>
+      <div class="modal-desc">
+        Send this summarized email directly to an Apple Messages (iMessage/SMS) contact or phone number via macOS AppleScript.
+      </div>
+      <input type="text" id="modal-recipient" class="modal-input" placeholder="Enter phone number (+1234567890) or Apple ID">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-confirm">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message">Summary copied to clipboard!</span>
+  </div>
+
+  <script>
+    let currentLabel = 'All';
+    let currentSearch = '';
+    let currentEmailList = [];
+    let pendingMessageEmailId = null;
+    let isConnectedAccount = false;
+
+    const emailContainer = document.getElementById('emails-container');
+    const searchInput = document.getElementById('search-input');
+    const toast = document.getElementById('toast');
+    const messagesModal = document.getElementById('messages-modal');
+    const modalRecipient = document.getElementById('modal-recipient');
+
+    // Check auth status
+    async function checkAuthStatus() {
+      try {
+        const res = await fetch('/api/auth/status');
+        const data = await res.json();
+        const dot = document.getElementById('account-dot');
+        const text = document.getElementById('account-email-text');
+
+        if (data.connected && data.email) {
+          isConnectedAccount = true;
+          dot.style.background = '#10b981'; // green
+          text.textContent = data.email;
+        } else {
+          isConnectedAccount = false;
+          dot.style.background = '#f59e0b'; // amber
+          text.textContent = 'Connect Gmail';
+        }
+      } catch (err) {
+        console.error("Auth status error:", err);
+      }
+    }
+
+    // Fetch and render data
+    async function loadEmails() {
+      try {
+        let url = `/api/emails?limit=200`;
+        if (currentLabel && currentLabel !== 'All') {
+          url += `&label=${encodeURIComponent(currentLabel)}`;
+        }
+        if (currentSearch) {
+          url += `&search=${encodeURIComponent(currentSearch)}`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+        currentEmailList = data.emails || [];
+        renderEmailList(currentEmailList);
+        document.getElementById('result-count').textContent = `Showing ${currentEmailList.length} email(s)`;
+      } catch (err) {
+        console.error("Error loading emails:", err);
+      }
+    }
+
+    async function loadStatsAndLabels() {
+      try {
+        const statsRes = await fetch('/api/stats');
+        const stats = await statsRes.json();
+        document.getElementById('stat-total').textContent = stats.total || 0;
+        document.getElementById('stat-actions').textContent = stats.actions || 0;
+        document.getElementById('stat-meetings').textContent = stats.meetings || 0;
+        document.getElementById('stat-security').textContent = stats.security || 0;
+
+        const labelsRes = await fetch('/api/labels');
+        const labelsData = await labelsRes.json();
+        const counts = labelsData.labels || {};
+
+        document.getElementById('count-All').textContent = counts.All || 0;
+        document.getElementById('count-Action').textContent = counts['Action Required'] || 0;
+        document.getElementById('count-Work').textContent = counts.Work || 0;
+        document.getElementById('count-Security').textContent = counts.Security || 0;
+        document.getElementById('count-Meeting').textContent = counts.Meeting || 0;
+        document.getElementById('count-Finance').textContent = counts.Finance || 0;
+        document.getElementById('count-Personal').textContent = counts.Personal || 0;
+        document.getElementById('count-Newsletter').textContent = counts.Newsletter || 0;
+      } catch (err) {
+        console.error("Error loading stats:", err);
+      }
+    }
+
+    function renderEmailList(emails) {
+      if (!emails || emails.length === 0) {
+        emailContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No emails found</div>
+            <div class="empty-desc">
+              ${currentSearch ? 'No emails match your current search.' : 'There are no emails in this category yet. Click "Sync Gmail Inbox" or connect your account to summarize your latest emails!'}
+            </div>
+            <button class="btn btn-primary" onclick="triggerSync(false)">📥 Sync Inbox Now</button>
+          </div>
+        `;
+        return;
+      }
+
+      emailContainer.innerHTML = emails.map(email => {
+        const initials = getInitials(email.sender);
+        const labelClass = `badge-${(email.label || 'General').replace(/\s+/g, '.')}`;
+        
+        return `
+          <article class="email-card" id="card-${email.id}">
+            <div class="card-header">
+              <div class="sender-info">
+                <div class="avatar">${initials}</div>
+                <div class="sender-details">
+                  <div class="sender-name">${escapeHtml(email.sender)}</div>
+                  <div class="email-date">${escapeHtml(email.date || 'Recent')}</div>
+                </div>
+              </div>
+              <div class="header-badges">
+                <span class="badge-label ${labelClass}">${escapeHtml(email.label || 'General')}</span>
+              </div>
+            </div>
+
+            <h3 class="email-subject">${escapeHtml(email.subject || '(No Subject)')}</h3>
+
+            <div class="takeaway-box">
+              <span class="takeaway-icon">📌</span>
+              <div class="takeaway-text">
+                <span class="takeaway-label">Key Takeaway:</span>
+                ${escapeHtml(email.key_takeaway || 'Summary available below.')}
+              </div>
+            </div>
+
+            ${email.action_items && email.action_items !== 'None required' && email.action_items !== 'None' ? `
+              <div class="actions-box">
+                <div class="actions-header">⚡ Action Items & Next Steps</div>
+                <div class="actions-list">${escapeHtml(email.action_items)}</div>
+              </div>
+            ` : ''}
+
+            <button class="details-toggle" onclick="toggleDetails('${email.id}')">
+              <span>View Full AI Summary & Original</span>
+              <span>▼</span>
+            </button>
+
+            <div class="full-summary-content" id="details-${email.id}">
+              <div style="font-weight: 700; color: #818cf8; margin-bottom: 8px;">🤖 Hugging Face LLM Summary:</div>
+              <div>${escapeHtml(email.summary || '')}</div>
+              <div style="font-weight: 700; color: #94a3b8; margin: 16px 0 8px;">📄 Original Email Preview:</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #94a3b8;">
+                ${escapeHtml(email.body || email.snippet || '')}
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="footer-left">
+                <button class="btn-action" onclick="copySummary('${email.id}')">
+                  📋 Copy Summary
+                </button>
+                <button class="btn-action btn-messages" onclick="openMessagesModal('${email.id}')">
+                  💬 Send to Messages
+                </button>
+              </div>
+              <button class="btn-action" style="color: #f87171;" onclick="deleteEmail('${email.id}')" title="Delete from local database">
+                🗑️
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function getInitials(name) {
+      if (!name) return 'EM';
+      const clean = name.replace(/<.*?>/, '').trim();
+      const parts = clean.split(' ').filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return clean.slice(0, 2).toUpperCase();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function toggleDetails(id) {
+      const el = document.getElementById(`details-${id}`);
+      if (el) {
+        el.classList.toggle('show');
+      }
+    }
+
+    function showToast(msg, icon = '✅') {
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function copySummary(id) {
+      const email = currentEmailList.find(e => e.id === id);
+      if (!email) return;
+      const text = `📬 Email Summary [${email.label}]:\nSubject: ${email.subject}\nFrom: ${email.sender}\n\nKey Takeaway: ${email.key_takeaway}\n\nAction Items: ${email.action_items}\n\n${email.summary}`;
+      navigator.clipboard.writeText(text);
+      showToast('Summary copied to clipboard!');
+    }
+
+    function openMessagesModal(id) {
+      pendingMessageEmailId = id;
+      messagesModal.classList.add('open');
+      modalRecipient.focus();
+    }
+
+    document.getElementById('modal-cancel').addEventListener('click', () => {
+      messagesModal.classList.remove('open');
+      pendingMessageEmailId = null;
+    });
+
+    document.getElementById('modal-confirm').addEventListener('click', async () => {
+      const recipient = modalRecipient.value.trim();
+      if (!recipient) {
+        alert('Please enter a phone number or Apple ID recipient.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/send-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email_id: pendingMessageEmailId, recipient: recipient })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Sent to Messages (${recipient})!`, '💬');
+          messagesModal.classList.remove('open');
+        } else {
+          alert(data.detail || 'Failed to dispatch via Messages.');
+        }
+      } catch (err) {
+        alert('Network error while sending to Messages.');
+      }
+    });
+
+    async function deleteEmail(id) {
+      if (!confirm('Remove this email summary from your local database?')) return;
+      try {
+        const res = await fetch(`/api/emails/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Email removed from database');
+          loadEmails();
+          loadStatsAndLabels();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function triggerSync(isDryRun = false) {
+      if (!isDryRun && !isConnectedAccount) {
+        if (confirm('No Gmail account connected yet. Would you like to connect your Gmail now?')) {
+          window.location.href = '/login';
+          return;
+        }
+      }
+
+      const btn = isDryRun ? document.getElementById('btn-dry-sync') : document.getElementById('btn-sync');
+      const spinner = document.getElementById('sync-spinner');
+      const btnText = document.getElementById('sync-btn-text');
+
+      if (!isDryRun) {
+        spinner.style.display = 'inline-block';
+        btnText.textContent = 'Syncing...';
+      }
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ max_emails: 5, dry_run: isDryRun })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Synced! Fetched ${data.total_fetched}, new: ${data.new_summarized}`, '✨');
+          loadEmails();
+          loadStatsAndLabels();
+          checkAuthStatus();
+        } else {
+          if (data.detail && data.detail.includes('/login')) {
+            if (confirm(data.detail + ' Go to connect page now?')) {
+              window.location.href = '/login';
+            }
+          } else {
+            alert(`Sync error: ${data.detail || 'Unknown error'}`);
+          }
+        }
+      } catch (err) {
+        alert('Error connecting to sync server.');
+      } finally {
+        btn.disabled = false;
+        if (!isDryRun) {
+          spinner.style.display = 'none';
+          btnText.textContent = '📥 Sync Gmail Inbox';
+        }
+      }
+    }
+
+    document.getElementById('btn-sync').addEventListener('click', () => triggerSync(false));
+    document.getElementById('btn-dry-sync').addEventListener('click', () => triggerSync(true));
+
+    // Label click filtering
+    document.querySelectorAll('.label-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.label-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        currentLabel = item.getAttribute('data-label');
+        loadEmails();
+      });
+    });
+
+    // Search input
+    let searchTimeout = null;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentSearch = e.target.value.trim();
+        loadEmails();
+      }, 250);
+    });
+
+    // Initial load
+    checkAuthStatus();
+    loadEmails();
+    loadStatsAndLabels();
+  </script>
+</body>
+</html>

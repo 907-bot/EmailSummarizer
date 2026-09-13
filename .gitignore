@@ -1,0 +1,23 @@
+# Environment & Secrets
+.env
+token.json
+credentials.json
+
+# Local Databases
+emails.db
+*.sqlite
+*.sqlite3
+
+# Python Caches & Virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
