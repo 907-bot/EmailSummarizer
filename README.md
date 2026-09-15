@@ -1,5 +1,6 @@
 # 📬 Google Email Summarizer with Hugging Face & macOS Messages/Notifications
-
+Here is the deployed link -> 
+https://emailsummarizer-sinc.onrender.com
 An automated email summarization pipeline that fetches your emails from Google (Gmail API or IMAP), generates crisp, structured bullet-point summaries using free Hugging Face LLMs, and delivers them directly to macOS **Desktop Notifications** and the **Apple Messages** app.
 
 ---
